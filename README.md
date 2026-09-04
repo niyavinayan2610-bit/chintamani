@@ -9,8 +9,7 @@
 ### Team Members
 
 * Team Lead: Niya Vinayan - Jain Deemed-to-be University
-* Member 2: N/A
-* Member 3: N/A
+  
 
 ### Project Description
 
