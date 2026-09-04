@@ -11,21 +11,38 @@ async function overthink() {
 
     const situation = situationInput.value.trim();
 
-    // Check if user entered a problem
+    // Check if problem is empty
     if (!situation) {
         alert("oru problem engilum ezhuthu bro 😭");
         return;
     }
 
-    // Disable button while AI is working
+    // Disable button
     button.disabled = true;
     button.innerText = "CHINTHAMANI IS THINKING...";
 
+
+    // ========================================
+    // API ADDRESS
+    // ========================================
+
+    // When testing on your computer:
+    // http://localhost:3000/api/overthink
+
+    // When deployed on Vercel:
+    // /api/overthink
+
+    const apiUrl =
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1"
+            ? "http://localhost:3000/api/overthink"
+            : "/api/overthink";
+
+
     try {
 
-        // Connect to Vercel API
         const response = await fetch(
-            "/api/overthink",
+            apiUrl,
             {
                 method: "POST",
 
@@ -40,32 +57,58 @@ async function overthink() {
         );
 
 
-        // Convert response to JSON
-        const data = await response.json();
+        // ========================================
+        // READ RESPONSE
+        // ========================================
 
+        const text = await response.text();
 
-        // Check for API errors
-        if (!response.ok) {
+        let data;
+
+        try {
+            data = JSON.parse(text);
+        } catch (jsonError) {
+
+            console.error("Server response:", text);
+
             throw new Error(
-                data.error || "AI request failed"
+                "Server returned an invalid response."
             );
         }
 
 
-        // Save AI result temporarily
+        // ========================================
+        // CHECK API ERROR
+        // ========================================
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.error || "AI request failed."
+            );
+        }
+
+
+        // ========================================
+        // SAVE RESULT
+        // ========================================
+
         sessionStorage.setItem(
             "chindhamaniResult",
             JSON.stringify(data)
         );
 
 
-        // Go to result page
+        // ========================================
+        // GO TO RESULT PAGE
+        // ========================================
+
         window.location.href = "result.html";
 
 
     } catch (error) {
 
-        console.error("ERROR:", error);
+        console.error("CHINDHAMANI ERROR:", error);
 
 
         alert(
@@ -88,18 +131,18 @@ async function overthink() {
 
 function loadResult() {
 
-    // If this isn't the result page, stop
+    // Not result page
     if (!result) {
         return;
     }
 
 
-    // Get saved AI result
+    // Get saved result
     const saved =
         sessionStorage.getItem("chindhamaniResult");
 
 
-    // No result found
+    // No result
     if (!saved) {
 
         result.innerHTML = `
@@ -119,133 +162,164 @@ function loadResult() {
     }
 
 
-    // Convert saved result back to object
-    const data = JSON.parse(saved);
+    let data;
+
+    try {
+
+        data = JSON.parse(saved);
+
+    } catch (error) {
+
+        console.error(error);
+
+        result.innerHTML = `
+            <div class="ai-response error">
+
+                <h3>Ayyo bro 😭</h3>
+
+                <p>
+                    result load cheyyan pattiyilla.
+                </p>
+
+            </div>
+        `;
+
+        return;
+    }
 
 
-    // Display result
+    // ========================================
+    // DISPLAY AI RESULT
+    // ========================================
+
     result.innerHTML = `
 
-        <!-- STAGE 1 -->
+        <div class="ai-response">
 
-        <section class="stage stage-one">
 
-            <h3>
-                🤔 Onnum illa bro
-            </h3>
+            <!-- STAGE 1 -->
 
-            <p>
-                ${escapeHTML(data.stage1)}
+            <section class="stage stage-one">
+
+                <h3>
+                    🤔 Onnum illa bro
+                </h3>
+
+                <p>
+                    ${escapeHTML(data.stage1)}
+                </p>
+
+            </section>
+
+
+            <!-- STAGE 2 -->
+
+            <section class="stage stage-two">
+
+                <h3>
+                    🧐 Endo undu
+                </h3>
+
+                <p>
+                    ${escapeHTML(data.stage2)}
+                </p>
+
+            </section>
+
+
+            <!-- STAGE 3 -->
+
+            <section class="stage stage-three">
+
+                <h3>
+                    😵 Seen ayi
+                </h3>
+
+                <p>
+                    ${escapeHTML(data.stage3)}
+                </p>
+
+            </section>
+
+
+            <!-- STAGE 4 -->
+
+            <section class="stage stage-four">
+
+                <h3>
+                    💀 Pani paali
+                </h3>
+
+                <p>
+                    ${escapeHTML(data.stage4)}
+                </p>
+
+            </section>
+
+
+            <hr>
+
+
+            <!-- SATHYAVASTHA -->
+
+            <section class="reality">
+
+                <h3>
+                    🛟 Sathyaavastha
+                </h3>
+
+
+                <p>
+                    <strong>WHAT WE KNOW:</strong>
+                </p>
+
+                <p>
+                    ${escapeHTML(data.known)}
+                </p>
+
+
+                <p>
+                    <strong>WHAT WE ARE ASSUMING:</strong>
+                </p>
+
+                <p>
+                    ${escapeHTML(data.assumptions)}
+                </p>
+
+            </section>
+
+
+            <!-- SCORE -->
+
+            <section class="score">
+
+                <h3>
+                    📊 OVERTHINKING SCORE
+                </h3>
+
+
+                <p class="score-number">
+                    ${data.score}/100
+                </p>
+
+
+                <p>
+                    ${escapeHTML(data.scoreExplanation)}
+                </p>
+
+            </section>
+
+
+            <!-- ENDING -->
+
+            <p class="complete">
+
+                ${escapeHTML(data.ending)}
+
             </p>
 
-        </section>
 
-
-        <!-- STAGE 2 -->
-
-        <section class="stage stage-two">
-
-            <h3>
-                🧐 Endo undu
-            </h3>
-
-            <p>
-                ${escapeHTML(data.stage2)}
-            </p>
-
-        </section>
-
-
-        <!-- STAGE 3 -->
-
-        <section class="stage stage-three">
-
-            <h3>
-                😵 Seen ayi
-            </h3>
-
-            <p>
-                ${escapeHTML(data.stage3)}
-            </p>
-
-        </section>
-
-
-        <!-- STAGE 4 -->
-
-        <section class="stage stage-four">
-
-            <h3>
-                💀 Pani paali
-            </h3>
-
-            <p>
-                ${escapeHTML(data.stage4)}
-            </p>
-
-        </section>
-
-
-        <hr>
-
-
-        <!-- REALITY CHECK -->
-
-        <section class="reality">
-
-            <h3>
-                🛟 Sathyaavastha
-            </h3>
-
-
-            <p>
-                <strong>WHAT WE KNOW:</strong>
-            </p>
-
-            <p>
-                ${escapeHTML(data.known)}
-            </p>
-
-
-            <p>
-                <strong>WHAT WE ARE ASSUMING:</strong>
-            </p>
-
-            <p>
-                ${escapeHTML(data.assumptions)}
-            </p>
-
-        </section>
-
-
-        <!-- SCORE -->
-
-        <section class="score">
-
-            <h3>
-                📊 OVERTHINKING SCORE
-            </h3>
-
-
-            <p class="score-number">
-                ${data.score}/100
-            </p>
-
-
-            <p>
-                ${escapeHTML(data.scoreExplanation)}
-            </p>
-
-        </section>
-
-
-        <!-- ENDING -->
-
-        <p class="complete">
-
-            ${escapeHTML(data.ending)}
-
-        </p>
+        </div>
 
     `;
 }
@@ -253,8 +327,7 @@ function loadResult() {
 
 
 // ========================================
-// SECURITY FUNCTION
-// Prevent AI text from being treated as HTML
+// ESCAPE HTML
 // ========================================
 
 function escapeHTML(text) {
@@ -269,7 +342,7 @@ function escapeHTML(text) {
 
 
 // ========================================
-// CTRL + ENTER SHORTCUT
+// CTRL + ENTER
 // ========================================
 
 if (situationInput) {
@@ -287,6 +360,7 @@ if (situationInput) {
 
                 overthink();
             }
+
         }
     );
 }
@@ -294,10 +368,11 @@ if (situationInput) {
 
 
 // ========================================
-// LOAD RESULT WHEN RESULT PAGE OPENS
+// LOAD RESULT
 // ========================================
 
 if (result) {
 
     loadResult();
+
 }
